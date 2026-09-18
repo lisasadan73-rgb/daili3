@@ -1,0 +1,15 @@
+# Generated on target servers — never commit
+**/secrets.env
+**/CLIENT_INFO.txt
+**/nodes.txt
+**/sub.b64
+**/config.json
+.env
+*.pem
+*.key
+
+# Local leftovers
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
