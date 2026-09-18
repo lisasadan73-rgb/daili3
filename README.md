@@ -1,91 +1,72 @@
-# Proxy One-Click（Xray Reality + 订阅 + Telegram 代理）
+# daili3 一键脚本
 
-在新服务器上一键部署与当前节点同类的代理栈：
+Xray VLESS+Reality（3 节点）+ 订阅链接 + Telegram MTProto / SOCKS5  
+风格类似 [mack-a/v2ray-agent](https://github.com/mack-a/v2ray-agent)：**一行命令安装**。
 
-- **3 条** VLESS + Reality（Vision）：对外端口 `443` / `8443` / `2053`
-- **订阅链接**（v2rayN 等）：`http://IP:2080/sub/<token>`
-- **Telegram MTProto**（mtg）：`3128`
-- **Telegram SOCKS5**：`10808`
-- Nginx stream SNI：公网 `443` → 本机 Xray `11443`
+> **要用下面的 wget 一键命令，仓库必须设为 Public（公开）。**  
+> 私有仓库无法直接 `raw.githubusercontent.com` 下载。  
+> 脚本里**不含**密钥，每次安装会在新机器上重新生成。
 
-每次安装都会**重新生成密钥**，不要把运行后的 `secrets.env` / `CLIENT_INFO.txt` 推到公开仓库。
+## 一键安装（推荐）
+
+```bash
+wget -P /root -N --no-check-certificate "https://raw.githubusercontent.com/lisasadan73-rgb/daili3/main/install.sh" && chmod 700 /root/install.sh && /root/install.sh
+```
+
+或用 curl：
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/lisasadan73-rgb/daili3/main/install.sh" -o /root/install.sh && chmod 700 /root/install.sh && /root/install.sh
+```
+
+装完会打印：订阅 URL、3 条 VLESS、Telegram 代理信息。  
+备份文件在：`/root/proxy-setup/CLIENT_INFO.txt`
+
+## 安装后有什么
+
+| 项目 | 说明 |
+|------|------|
+| Reality 节点 | 端口 `443` / `8443` / `2053` |
+| 订阅 | `http://IP:2080/sub/<随机token>` |
+| Telegram MTProto | `3128` |
+| Telegram SOCKS5 | `10808` |
+| Nginx | 公网 443 SNI 转发到本机 Xray |
+
+## 可选参数
+
+```bash
+OVERRIDE_PUBLIC_IP=1.2.3.4 bash /root/install.sh
+NODE_PREFIX=LA bash /root/install.sh
+APP_DIR=/opt/proxy-setup bash /root/install.sh
+SKIP_NGINX=1 bash /root/install.sh
+```
 
 ## 要求
 
-- Debian / Ubuntu（root）
+- Debian / Ubuntu，root
 - 能访问 GitHub（下载 Xray、mtg）
-- 云厂商安全组放行：`443, 8443, 2053, 3128, 2080, 10808`
-
-## 一键安装
-
-把本仓库弄到新机器后：
-
-```bash
-cd proxy-oneclick   # 或你的仓库目录名
-bash install.sh
-```
-
-可选环境变量：
-
-```bash
-# 指定公网 IP（自动检测失败时）
-OVERRIDE_PUBLIC_IP=1.2.3.4 bash install.sh
-
-# 节点名称前缀（默认 Node → Node-Reality-443）
-NODE_PREFIX=LA bash install.sh
-
-# 安装目录（默认 /root/proxy-setup）
-APP_DIR=/opt/proxy-setup bash install.sh
-
-# 不改 nginx（已有 443 业务时）
-SKIP_NGINX=1 bash install.sh
-```
-
-装完会打印订阅、三条 VLESS、Telegram 链接，并写入：
-
-- `/root/proxy-setup/CLIENT_INFO.txt`
-- `/root/proxy-setup/secrets.env`
-
-## 上传到 GitHub（建议 Private）
-
-本仓库**只提交脚本与说明**，不要提交任何密钥文件。
-
-```bash
-# 在本机（有 git / gh 的机器上）
-cd proxy-oneclick
-git init -b main
-git add install.sh uninstall.sh README.md .gitignore
-git commit -m "Add one-click proxy installer"
-gh auth login
-gh repo create proxy-oneclick --private --source=. --remote=origin --push
-```
-
-新服务器用法：
-
-```bash
-# Private 仓库需带 token，或用 SSH
-git clone git@github.com:你的用户名/proxy-oneclick.git
-cd proxy-oneclick
-bash install.sh
-```
-
-没有 git 时，也可打包上传：
-
-```bash
-tar -czf proxy-oneclick.tar.gz install.sh uninstall.sh README.md .gitignore
-# scp 到新机后解压再 bash install.sh
-```
+- 安全组放行：`443, 8443, 2053, 3128, 2080, 10808`
 
 ## 卸载
 
 ```bash
-bash uninstall.sh
-# 连同官方 Xray 一起卸：
-REMOVE_XRAY=1 bash uninstall.sh
+wget -P /root -N --no-check-certificate "https://raw.githubusercontent.com/lisasadan73-rgb/daili3/main/uninstall.sh" && chmod 700 /root/uninstall.sh && /root/uninstall.sh
 ```
+
+连同 Xray 一起卸：
+
+```bash
+REMOVE_XRAY=1 bash /root/uninstall.sh
+```
+
+## 把仓库改成公开（才能 wget）
+
+1. 打开 https://github.com/lisasadan73-rgb/daili3/settings  
+2. 拉到最下 **Danger Zone** → **Change visibility** → **Public**  
+3. 改完后，新服务器直接跑上面的一键命令即可
 
 ## 注意
 
-1. **仓库请设为 Private**；即使用 Private，也只提交脚本，密钥只留在服务器。
-2. 若机器上已有占用 `443` 的网站，先评估再装，或使用 `SKIP_NGINX=1` 并自行把流量转到 `127.0.0.1:11443`。
-3. 本脚本会覆盖 `/usr/local/etc/xray/config.json` 以及 mtg / 订阅相关 systemd 单元。
+- 脚本会覆盖本机 `/usr/local/etc/xray/config.json` 以及 mtg / 订阅相关 systemd
+- 已有网站占用 443 时先评估，或使用 `SKIP_NGINX=1`
+- 不要把服务器上生成的 `secrets.env` / `CLIENT_INFO.txt` 再提交回 GitHub
